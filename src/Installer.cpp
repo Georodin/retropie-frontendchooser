@@ -2,7 +2,8 @@
 
 #include <QDir>
 #include <QFileInfo>
-
+#include <QTextStream>
+#include <iostream>
 
 Installer::Installer(QObject* parent)
     : QObject(parent)
@@ -21,8 +22,25 @@ Installer::Installer(QObject* parent)
 bool Installer::retropieAvailable() const
 {
     const QFileInfo pkgman(m_pkgman_path);
-    return pkgman.exists() && pkgman.isFile() && pkgman.isExecutable();
+    bool exists = pkgman.exists();
+    bool isFile = pkgman.isFile();
+    bool isExecutable = pkgman.isExecutable();
+
+    // Open a log file in append mode
+    QFile logFile("/home/pi/fe_debug_log.txt"); // Specify the path to your log file
+    if (logFile.open(QIODevice::WriteOnly | QIODevice::Append)) {
+        QTextStream logStream(&logFile);
+        logStream << "Checking RetroPie Availability:\n";
+        logStream << "Path: " << m_pkgman_path << "\n";
+        logStream << "Exists: " << (exists ? "Yes" : "No") << "\n";
+        logStream << "Is File: " << (isFile ? "Yes" : "No") << "\n";
+        logStream << "Is Executable: " << (isExecutable ? "Yes" : "No") << "\n\n";
+        logFile.flush(); // Ensures that all data is written to the file
+    }
+
+    return exists && isFile && isExecutable;
 }
+
 
 bool Installer::installed(Frontend* frontend) const
 {
